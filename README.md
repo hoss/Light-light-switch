@@ -4,7 +4,7 @@ A starting point for a non trivial Arduino based project.
 
 ## Use
 
-Open with PlatformIO inside VS Code and bring the magic. Assumes you’re using a [Feather M4 Express][1] with an [OLED Featherwing][2]. Edit platform.ini if you want to use a different board.
+Open with PlatformIO inside VS Code and bring the magic. Assumes you�re using a [Feather M4 Express][1] with an [OLED Featherwing][2]. Edit platform.ini if you want to use a different board.
 
 ## Resources
 * [Feather M4 Express][3].
@@ -15,6 +15,7 @@ Open with PlatformIO inside VS Code and bring the magic. Assumes you’re using 
 
 ## Credits
 The giants whose shoulders I stand atop.
+
 * **[Kevin Gagnon][6]** - *TaskScheduler*
 
 ## License
