@@ -9,8 +9,9 @@ Trace trace = Trace();
 Timer timer;
 
 // config
-const String APP_VERSION = "0.4";    // the version of this app
-const String APP_NAME = "Scaffold!"; // the version of this app
+const int lightThreshold = 789;
+const String APP_VERSION = "0.2";           // the version of this app
+const String APP_NAME = "LightLightSwitch"; // the version of this app
 const bool WAIT_FOR_SERIAL = false;
 const unsigned int SERIAL_BAUDRATE = 115200;
 const unsigned int DEBOUNCE_DURATION = 80;
@@ -36,10 +37,17 @@ const String DEBUG_RULE = "=====================================================
 
 // PINS
 const byte SENSOR_PIN = A4;
-// Setup a new OneButton on pin A1.
+const byte LIGHT_SWITCH_PIN = A2;
 OneButton buttonA(BUTTON_A, true);
 
 volatile bool interrupted = false;
+
+// State
+const byte OFF_STATE = 0;
+const byte ON_STATE = 1;
+const byte OFF_OVERRIDE_STATE = 2;
+const byte ON_OVERRIDE_STATE = 3;
+byte state = OFF_STATE;
 
 void setup()
 {
@@ -58,12 +66,34 @@ void setup()
 
 void initTimers()
 {
-  timer.every(1000, oneSecondTickCallback);
+  trace.trace("initTimers");
+  timer.every(1000, checkLightLevels);
 }
 
-void oneSecondTickCallback()
+void checkLightLevels()
 {
-  // TODO:: What do you want me to do every second?
+  int newBrightness = analogRead(SENSOR_PIN);
+  trace.trace("B:" + String(newBrightness));
+  if (state == OFF_STATE && newBrightness > lightThreshold)
+  {
+    switchOnLight();
+    state = ON_STATE;
+  }
+  else if (state == ON_STATE && newBrightness < lightThreshold)
+  {
+    switchOffLight();
+    state = OFF_STATE;
+  }
+}
+
+void switchOnLight()
+{
+  digitalWrite(LIGHT_SWITCH_PIN, HIGH);
+}
+
+void switchOffLight()
+{
+  digitalWrite(LIGHT_SWITCH_PIN, LOW);
 }
 
 void loop()
@@ -164,6 +194,7 @@ void initButtons()
 
 void initPins()
 {
+  setHighOutput(LIGHT_SWITCH_PIN);
 }
 
 void setPulledUpInput(byte pin)
