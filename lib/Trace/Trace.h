@@ -1,7 +1,8 @@
 /*****************************************************************************************
-*	Class:		Debugger
+*	Class:		Trace
 *	Purpose:	Outputs debug information to serial port and OLED display if connected
-*
+*   Author:     Hoss Gifford, hoss@flamjam.com
+*   License:    MIT, https://choosealicense.com/licenses/mit/
 ******************************************************************************************/
 
 #ifndef Morse_h
