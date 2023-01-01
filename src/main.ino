@@ -12,7 +12,7 @@ Timer timer;
 long unsigned int startUpDelay = 15 * 1000;
 const int LIGHT_THRESHOLD = 888;
 const int DURATION_BETWEEN_CHECK_LIGHT_LEVELS = 200;
-const String APP_VERSION = "0.3";           // the version of this app
+const String APP_VERSION = "2";           // the version of this app
 const String APP_NAME = "LightLightSwitch"; // the version of this app
 const bool WAIT_FOR_SERIAL = false;
 const unsigned int SERIAL_BAUDRATE = 115200;
@@ -125,7 +125,7 @@ void switchLight()
 {
   if (state != queuedState && millis() - timeLastStateChanged > DEBOUNCE_DURATION)
   {
-    if (queuedState == OFF_STATE)
+    if (queuedState == ON_STATE)
     {
       switchOffLight();
     }
