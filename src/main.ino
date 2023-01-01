@@ -16,7 +16,7 @@ const String APP_VERSION = "0.3";           // the version of this app
 const String APP_NAME = "LightLightSwitch"; // the version of this app
 const bool WAIT_FOR_SERIAL = false;
 const unsigned int SERIAL_BAUDRATE = 115200;
-const unsigned int DEBOUNCE_DURATION = 80;
+const unsigned int DEBOUNCE_DURATION = 1500;
 
 // config OLED
 const bool USE_DISPLAY = false;
@@ -51,6 +51,8 @@ const byte ON_STATE = 1;
 const byte OFF_OVERRIDE_STATE = 2;
 const byte ON_OVERRIDE_STATE = 3;
 byte state = OFF_STATE;
+byte queuedState = OFF_STATE;
+unsigned long timeLastStateChanged = 0;
 
 void setup()
 {
@@ -68,9 +70,11 @@ void setup()
   trace.setNeoPixelColor(DEFAULT_NEOPIXEL_COLOR);
 }
 
-void doStartUpDelay(){
+void doStartUpDelay()
+{
   int delayBetweenFlashes = 250;
-  while(millis()<startUpDelay){
+  while (millis() < startUpDelay)
+  {
     digitalWrite(LED_BUILTIN, HIGH);
     delay(delayBetweenFlashes);
     digitalWrite(LED_BUILTIN, LOW);
@@ -90,14 +94,16 @@ void checkLightLevels()
   if (state == OFF_STATE && newBrightness > LIGHT_THRESHOLD)
   {
     reportChange = true;
-    switchOnLight();
-    state = ON_STATE;
+    changeState(ON_STATE);
+    // switchOnLight();
+    // state = ON_STATE;
   }
   else if (state == ON_STATE && newBrightness < LIGHT_THRESHOLD)
   {
     reportChange = true;
-    switchOffLight();
-    state = OFF_STATE;
+    changeState(OFF_STATE);
+    // switchOffLight();
+    // state = OFF_STATE;
   }
   if (abs(newBrightness - lightLevel) > 50)
     reportChange = true;
@@ -105,6 +111,29 @@ void checkLightLevels()
   {
     lightLevel = newBrightness;
     trace.trace("B:" + String(newBrightness));
+  }
+  switchLight();
+}
+
+void changeState(byte newState)
+{
+  queuedState = newState;
+  timeLastStateChanged = millis();
+}
+
+void switchLight()
+{
+  if (state != queuedState && millis() - timeLastStateChanged > DEBOUNCE_DURATION)
+  {
+    if (queuedState == OFF_STATE)
+    {
+      switchOffLight();
+    }
+    else
+    {
+      switchOnLight();
+    }
+    state = queuedState;
   }
 }
 
@@ -130,22 +159,22 @@ void loop()
 }
 
 /*
- *  
  *
  *
  *
- * 
- * 
- * 
- * 
- * 
- * 
- * 
- * 
- * 
- * 
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  ***************        BUTTON CALLBACKS       ****************
- * 
+ *
  */
 
 // This function will be called when the button1 was pressed 1 time (and no 2. button press followed).
@@ -179,22 +208,22 @@ void longPressStop1()
 } // longPressStop1
 
 /*
- *  
  *
  *
  *
- * 
- * 
- * 
- * 
- * 
- * 
- * 
- * 
- * 
- * 
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  ***************        BOOTSTRAP UTILITIES       ****************
- * 
+ *
  */
 
 void showStartUpMessage()
