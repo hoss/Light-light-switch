@@ -1,6 +1,6 @@
-# Arduino project scaffold
+# Light light switch
 
-A starting point for a non trivial Arduino based project.
+Takes the state of a lightbulb to determine mains power to an outlet that powers several LED strip lights, but could power any number of other mains powered devices, making the old school light switch on the wall of my basement the trigger for a start up sequence of other things.
 
 ## Use
 
