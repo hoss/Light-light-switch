@@ -9,15 +9,17 @@ Trace trace = Trace();
 Timer timer;
 
 // config
-const int lightThreshold = 789;
-const String APP_VERSION = "0.2";           // the version of this app
+long unsigned int startUpDelay = 15 * 1000;
+const int LIGHT_THRESHOLD = 888;
+const int DURATION_BETWEEN_CHECK_LIGHT_LEVELS = 200;
+const String APP_VERSION = "0.3";           // the version of this app
 const String APP_NAME = "LightLightSwitch"; // the version of this app
 const bool WAIT_FOR_SERIAL = false;
 const unsigned int SERIAL_BAUDRATE = 115200;
 const unsigned int DEBOUNCE_DURATION = 80;
 
 // config OLED
-const bool USE_DISPLAY = true;
+const bool USE_DISPLAY = false;
 const bool UPSIDE_DOWN_DISPLAY = false;
 const byte OLED_RESET = 5;
 const unsigned int OLED_STARTUP_DELAY = 1000;
@@ -36,11 +38,12 @@ const uint32_t DEFAULT_NEOPIXEL_COLOR = trace.GREEN;
 const String DEBUG_RULE = "=====================================================\n";
 
 // PINS
-const byte SENSOR_PIN = A4;
-const byte LIGHT_SWITCH_PIN = A2;
+const byte SENSOR_PIN = A5;
+const byte LIGHT_SWITCH_PIN = A0;
 OneButton buttonA(BUTTON_A, true);
 
 volatile bool interrupted = false;
+int lightLevel = 0;
 
 // State
 const byte OFF_STATE = 0;
@@ -51,49 +54,72 @@ byte state = OFF_STATE;
 
 void setup()
 {
-  pinMode(LED_BUILTIN, OUTPUT);
-  trace.initDisplay(UPSIDE_DOWN_DISPLAY, OLED_STARTUP_DELAY, OLED_RESET);
+  initPins();
+  if (USE_DISPLAY)
+    trace.initDisplay(UPSIDE_DOWN_DISPLAY, OLED_STARTUP_DELAY, OLED_RESET);
   trace.initSerial(SERIAL_BAUDRATE, WAIT_FOR_SERIAL);
   if (NEO_PIXEL_COUNT > 0)
     trace.initNeoPixel(NEO_PIXEL_COUNT, NEO_PIXEL_PIN);
   trace.setNeoPixelColor(trace.YELLOW);
   showStartUpMessage();
-  initPins();
   initButtons();
+  doStartUpDelay();
   initTimers();
   trace.setNeoPixelColor(DEFAULT_NEOPIXEL_COLOR);
 }
 
+void doStartUpDelay(){
+  int delayBetweenFlashes = 250;
+  while(millis()<startUpDelay){
+    digitalWrite(LED_BUILTIN, HIGH);
+    delay(delayBetweenFlashes);
+    digitalWrite(LED_BUILTIN, LOW);
+    delay(delayBetweenFlashes);
+  }
+}
+
 void initTimers()
 {
-  trace.trace("initTimers");
-  timer.every(1000, checkLightLevels);
+  timer.every(DURATION_BETWEEN_CHECK_LIGHT_LEVELS, checkLightLevels);
 }
 
 void checkLightLevels()
 {
+  bool reportChange = false;
   int newBrightness = analogRead(SENSOR_PIN);
-  trace.trace("B:" + String(newBrightness));
-  if (state == OFF_STATE && newBrightness > lightThreshold)
+  if (state == OFF_STATE && newBrightness > LIGHT_THRESHOLD)
   {
+    reportChange = true;
     switchOnLight();
     state = ON_STATE;
   }
-  else if (state == ON_STATE && newBrightness < lightThreshold)
+  else if (state == ON_STATE && newBrightness < LIGHT_THRESHOLD)
   {
+    reportChange = true;
     switchOffLight();
     state = OFF_STATE;
+  }
+  if (abs(newBrightness - lightLevel) > 50)
+    reportChange = true;
+  if (reportChange)
+  {
+    lightLevel = newBrightness;
+    trace.trace("B:" + String(newBrightness));
   }
 }
 
 void switchOnLight()
 {
+  trace.trace("switchOnLight");
   digitalWrite(LIGHT_SWITCH_PIN, HIGH);
+  digitalWrite(LED_BUILTIN, HIGH);
 }
 
 void switchOffLight()
 {
+  trace.trace("switchOffLight");
   digitalWrite(LIGHT_SWITCH_PIN, LOW);
+  digitalWrite(LED_BUILTIN, LOW);
 }
 
 void loop()
@@ -173,6 +199,7 @@ void longPressStop1()
 
 void showStartUpMessage()
 {
+  delay(300);
   digitalWrite(LED_BUILTIN, HIGH);
   trace.setNeoPixelColor(trace.MAGENTA);
   trace.trace(APP_NAME);
@@ -194,7 +221,8 @@ void initButtons()
 
 void initPins()
 {
-  setHighOutput(LIGHT_SWITCH_PIN);
+  setLowOutput(LIGHT_SWITCH_PIN);
+  setHighOutput(LED_BUILTIN);
 }
 
 void setPulledUpInput(byte pin)
@@ -207,4 +235,10 @@ void setHighOutput(byte pin)
 {
   pinMode(pin, OUTPUT);
   digitalWrite(pin, HIGH);
+}
+
+void setLowOutput(byte pin)
+{
+  pinMode(pin, OUTPUT);
+  digitalWrite(pin, LOW);
 }
